@@ -67,20 +67,20 @@ int main(){
     cout<<"\n(5) Initiating KDTree's K-Nearest Neighbors assert...\n";
     myKDTree.k_nearest_neighbor(k,key);
     cout<<"2-Nearest Neighbors are: "<<endl;
-    for (auto it=myKDTree.knn.begin(); it!=myKDTree.knn.end(); ++it)
+    for (auto it=myKDTree.K_nearest.begin(); it!=myKDTree.K_nearest.end(); ++it)
     {    
         cout<<"("<<coords[0]<<","<<coords[1]<<")\t";
         cout <<"<"<<setprecision(4)<<it->first<<">\t";
         it->second->print();
     }
-    assert(myKDTree.knn.size()== k);
+    assert(myKDTree.K_nearest.size()== k);
     cout<<"K-Nearest Neighbors test passed!"<<endl;
     
     cout<<"(6) Initiating KDTree's Range Query assert...\n";
     double radius = 40.f;
     myKDTree.range_query(radius,key);
 
-    for (auto it=myKDTree.rq.begin(); it!=myKDTree.rq.end(); ++it)
+    for (auto it=myKDTree.R_query.begin(); it!=myKDTree.R_query.end(); ++it)
     {    
         cout<<"("<<coords[0]<<","<<coords[1]<<")\t";
         cout <<"<"<<setprecision(4)<<it->first<<">\t";
