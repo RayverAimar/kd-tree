@@ -41,9 +41,10 @@ public:
     size_t size() const;
     KDNode<N,ElemType>* get_root() const;
     KDNode<N,ElemType>** get_next(KDNode<N, ElemType>**); 
+    
     //Others
-    map<double, Point<N,ElemType>*> knn;
-    map<double, Point<N,ElemType>*> rq;
+    map<double, Point<N,ElemType>*> K_nearest;
+    map<double, Point<N,ElemType>*> R_query;
 
 private:
     size_t _size, _dimension;
@@ -192,7 +193,7 @@ template <size_t N, typename ElemType>
 void KDTree<N, ElemType>::k_nearest_neighbor(size_t k, Point<N,ElemType>& key)
 {
     double best_distance = numeric_limits<double>::infinity();
-    k_nearest_neighbor(root,size_t(0),key,knn,k, best_distance);
+    k_nearest_neighbor(root,size_t(0),key,K_nearest,k, best_distance);
 }
 
 template <size_t N, typename ElemType>
@@ -273,7 +274,7 @@ void KDTree<N, ElemType>::range_query(  KDNode<N,ElemType>* cur_node, size_t dep
 template <size_t N, typename ElemType>
 void KDTree<N, ElemType>::range_query(double radius,Point<N,ElemType>& key)
 {
-    range_query(root,0,key,rq, radius);
+    range_query(root,0,key,R_query, radius);
 }
 
 #endif // KDTREE_INCLUDED
