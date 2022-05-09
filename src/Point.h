@@ -9,130 +9,141 @@
 #ifndef POINT_INCLUDED
 #define POINT_INCLUDED
 
+#include <algorithm>
 #include <cmath>
+#include <iostream>
+ 
+using std::size_t; using std::cout;
 
-template <size_t N>
+template <size_t N, typename ElemType>
 class Point {
 public:
-    // Type: iterator
-    // Type: const_iterator
-    // ------------------------------------------------------------------------
-    // Types representing iterators that can traverse and optionally modify the
-    // elements of the Point.
-    typedef double* iterator;
-    typedef const double* const_iterator;
-    
-    // size_t size() const;
-    // Usage: for (size_t i = 0; i < myPoint.size(); ++i)
-    // ------------------------------------------------------------------------
-    // Returns N, the dimension of the point.
+
+    Point();
+    Point(ElemType*);
+    ~Point();
+
     size_t size() const;
-    
-    // double& operator[](size_t index);
-    // double operator[](size_t index) const;
-    // Usage: myPoint[3] = 137;
-    // ------------------------------------------------------------------------
-    // Queries or retrieves the value of the point at a particular point. The
-    // index is assumed to be in-range.
-    double& operator[](size_t index);
-    double operator[](size_t index) const;
-    
-    // iterator begin();
-    // iterator end();
-    // const_iterator begin() const;
-    // const_iterator end() const;
-    // Usage: for (Point<3>::iterator itr = myPoint.begin(); itr != myPoint.end(); ++itr)
-    // ------------------------------------------------------------------------
-    // Returns iterators delineating the full range of elements in the Point.
-    iterator begin();
-    iterator end();
-    
-    const_iterator begin() const;
-    const_iterator end() const;
+    ElemType* duplicate();
+    bool insert(size_t, ElemType);
+    bool operator == (const Point<N,ElemType>& p);
+    bool operator != (const Point<N,ElemType>& p);
+    Point<N,ElemType>& operator = (const Point<N,ElemType>&);
+    ElemType  operator []  (size_t) const;
+    ElemType& operator []  (size_t);
+    void print();
 
 private:
-    // The point's actual coordinates are stored in an array.
-    double coords[N];
+    ElemType* coords;
+    size_t _end, _begin, _size;
 };
 
-// double Distance(const Point<N>& one, const Point<N>& two);
-// Usage: double d = Distance(one, two);
-// ----------------------------------------------------------------------------
-// Returns the Euclidean distance between two points.
-template <size_t N>
-double Distance(const Point<N>& one, const Point<N>& two);
-
-// bool operator==(const Point<N>& one, const Point<N>& two);
-// bool operator!=(const Point<N>& one, const Point<N>& two);
-// Usage: if (one == two)
-// ----------------------------------------------------------------------------
-// Returns whether two points are equal or not equal.
-template <size_t N>
-bool operator==(const Point<N>& one, const Point<N>& two);
-
-template <size_t N>
-bool operator!=(const Point<N>& one, const Point<N>& two);
-
-/** Point class implementation details */
-
-#include <algorithm>
-
-template <size_t N>
-size_t Point<N>::size() const {
-    return N;
+template <size_t N, typename ElemType>
+Point<N, ElemType>::Point(): _end(N-1), _size(N), _begin(0){
+    coords = new ElemType[N];
+    for(size_t i = 0; i < _size; i++)
+    {
+        coords[i]=0;
+    }
 }
 
-template <size_t N>
-double& Point<N>::operator[] (size_t index) {
-    return coords[index];
+template <size_t N, typename ElemType>
+Point<N, ElemType>::Point(ElemType* p): _end(N-1), _size(N), _begin(0){
+    coords = new ElemType[N];
+    for(size_t i = 0; i < _size; i++)
+    {
+        coords[i]=p[i];
+    }
 }
 
-template <size_t N>
-double Point<N>::operator[] (size_t index) const {
-    return coords[index];
+template <size_t N, typename ElemType>
+Point<N, ElemType>::~Point(){
+    delete[] coords;
 }
 
-template <size_t N>
-typename Point<N>::iterator Point<N>::begin() {
+template <size_t N, typename ElemType>
+size_t Point<N, ElemType>::size() const {
+    return _size;
+}
+
+template <size_t N, typename ElemType>
+bool Point<N, ElemType>::insert(size_t i, ElemType value){
+    if(i<N)
+    {
+        return coords[i]=value;
+    }
+    return 0;
+}
+
+template <size_t N, typename ElemType>
+ElemType* Point<N, ElemType>::duplicate() {
     return coords;
 }
 
-template <size_t N>
-typename Point<N>::const_iterator Point<N>::begin() const {
-    return coords;
+template <size_t N, typename ElemType>
+double Distance(const Point<N, ElemType>& one, const Point<N, ElemType>& two);
+
+template <size_t N, typename ElemType>
+bool Point<N, ElemType>::operator==(const Point<N, ElemType>& p){
+    for(size_t i = 0; i < _size; i++){
+        if(coords[i]!=p[i]){
+            return 0;
+        }
+    }
+    return 1;
 }
 
-template <size_t N>
-typename Point<N>::iterator Point<N>::end() {
-    return begin() + size();
+template <size_t N, typename ElemType>
+bool Point<N, ElemType>::operator!=(const Point<N, ElemType>& p){
+    for(size_t i = 0; i < _size; i++){
+        if(coords[i]==p[i]){
+            return 0;
+        }
+    }
+    return 1;
 }
 
-template <size_t N>
-typename Point<N>::const_iterator Point<N>::end() const {
-    return begin() + size();
+template <size_t N, typename ElemType>
+Point<N, ElemType>& Point<N, ElemType>::operator = (const Point<N,ElemType>& point)
+{   
+    for (size_t i = 0; i < _size; ++i)
+    {
+        coords[i] = point[i];
+    }
+    return *this;
 }
 
-// Computing the distance uses the standard distance formula: the square root of
-// the sum of the squares of the differences between matching components.
-template <size_t N>
-double Distance(const Point<N>& one, const Point<N>& two) {
+template <size_t N, typename ElemType>
+ElemType Point<N, ElemType>::operator[] (size_t i) const{
+    return coords[i];
+}
+
+template <size_t N, typename ElemType>
+ElemType& Point<N, ElemType>::operator[] (size_t i){
+    return coords[i];
+}
+
+template <size_t N, typename ElemType>
+void Point<N, ElemType>::print(){
+    cout<<"( ";
+    for(size_t i = 0; i < _size; i++){
+        cout<<coords[i];
+        if (i<_size-1)
+        {
+            cout<<", ";
+        }
+    }
+    cout<<")\n";
+}
+
+
+template <size_t N, typename ElemType>
+double Distance(const Point<N, ElemType>& one, const Point<N, ElemType>& two) {
     double result = 0.0;
     for (size_t i = 0; i < N; ++i)
         result += (one[i] - two[i]) * (one[i] - two[i]);
     
     return sqrt(result);
-}
-
-// Equality is implemented using the equal algorithm, which takes in two ranges
-// and reports whether they contain equal values.
-template <size_t N>
-bool operator==(const Point<N>& one, const Point<N>& two) {
-    return std::equal(one.begin(), one.end(), two.begin());
-}
-
-template <size_t N>
-bool operator!=(const Point<N>& one, const Point<N>& two) {
-    return !(one == two);
 }
 
 #endif // POINT_INCLUDED

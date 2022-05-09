@@ -1,126 +1,280 @@
-/**
- * File: KDTree.h
- * Author: (your name here)
- * ------------------------
- * An interface representing a kd-tree in some number of dimensions. The tree
- * can be constructed from a set of data and then queried for membership and
- * nearest neighbors.
- */
-
 #ifndef KDTREE_INCLUDED
 #define KDTREE_INCLUDED
 
 #include "Point.h"
-#include "BoundedPQueue.h"
+#include "KDNode.h"
 #include <stdexcept>
 #include <cmath>
+#include <stack>
+#include <map>
 
-// "using namespace" in a header file is conventionally frowned upon, but I'm
-// including it here so that you may use things like size_t without having to
-// type std::size_t every time.
 using namespace std;
 
 template <size_t N, typename ElemType>
 class KDTree {
 public:
-    // Constructor: KDTree();
-    // Usage: KDTree<3, int> myTree;
-    // ----------------------------------------------------
-    // Constructs an empty KDTree.
+
+    // Constructor & Destructor
     KDTree();
-    
-    // Destructor: ~KDTree()
-    // Usage: (implicit)
-    // ----------------------------------------------------
-    // Cleans up all resources used by the KDTree.
     ~KDTree();
     
-    // KDTree(const KDTree& rhs);
-    // KDTree& operator=(const KDTree& rhs);
-    // Usage: KDTree<3, int> one = two;
-    // Usage: one = two;
-    // -----------------------------------------------------
-    // Deep-copies the contents of another KDTree into this one.
-    KDTree(const KDTree& rhs);
-    KDTree& operator=(const KDTree& rhs);
+    //Primary Functions
+    bool find(KDNode<N,ElemType>**&, Point<N,ElemType>&, size_t &depth);
+    bool insert(Point<N, ElemType>& p);
+    bool erase(Point<N, ElemType>& p);
+
+    //Secondary Functions
+    double nearest_neighbor(Point<N,ElemType>&, KDNode<N,ElemType>*&);
+    void nearest_neighbor(KDNode<N,ElemType>*,size_t,Point<N,ElemType>&, KDNode<N,ElemType>*&, double&);
+    void k_nearest_neighbor(KDNode<N,ElemType>*, size_t, Point<N,ElemType>&, map<double, Point<N,ElemType>*>&, size_t, double);
+    void k_nearest_neighbor(size_t,Point<N,ElemType>&);
+    void range_query(KDNode<N,ElemType>*,size_t,Point<N,ElemType>&, map<double, Point<N,ElemType>*>&, double);
+    void range_query(double,Point<N,ElemType>&);
     
-    // size_t dimension() const;
-    // Usage: size_t dim = kd.dimension();
-    // ----------------------------------------------------
-    // Returns the dimension of the points stored in this KDTree.
-    size_t dimension() const;
-    
-    // size_t size() const;
-    // bool empty() const;
-    // Usage: if (kd.empty())
-    // ----------------------------------------------------
-    // Returns the number of elements in the kd-tree and whether the tree is
-    // empty.
-    size_t size() const;
+    //Auxiliar Functions
     bool empty() const;
-    
-    // bool contains(const Point<N>& pt) const;
-    // Usage: if (kd.contains(pt))
-    // ----------------------------------------------------
-    // Returns whether the specified point is contained in the KDTree.
-    bool contains(const Point<N>& pt) const;
-    
-    // void insert(const Point<N>& pt, const ElemType& value);
-    // Usage: kd.insert(v, "This value is associated with v.");
-    // ----------------------------------------------------
-    // Inserts the point pt into the KDTree, associating it with the specified
-    // value. If the element already existed in the tree, the new value will
-    // overwrite the existing one.
-    void insert(const Point<N>& pt, const ElemType& value);
-    
-    // ElemType& operator[](const Point<N>& pt);
-    // Usage: kd[v] = "Some Value";
-    // ----------------------------------------------------
-    // Returns a reference to the value associated with point pt in the KDTree.
-    // If the point does not exist, then it is added to the KDTree using the
-    // default value of ElemType as its key.
-    ElemType& operator[](const Point<N>& pt);
-    
-    // ElemType& at(const Point<N>& pt);
-    // const ElemType& at(const Point<N>& pt) const;
-    // Usage: cout << kd.at(v) << endl;
-    // ----------------------------------------------------
-    // Returns a reference to the key associated with the point pt. If the point
-    // is not in the tree, this function throws an out_of_range exception.
-    ElemType& at(const Point<N>& pt);
-    const ElemType& at(const Point<N>& pt) const;
-    
-    // ElemType kNNValue(const Point<N>& key, size_t k) const
-    // Usage: cout << kd.kNNValue(v, 3) << endl;
-    // ----------------------------------------------------
-    // Given a point v and an integer k, finds the k points in the KDTree
-    // nearest to v and returns the most common value associated with those
-    // points. In the event of a tie, one of the most frequent value will be
-    // chosen.
-    ElemType kNNValue(const Point<N>& key, size_t k) const;
+
+    //Getters
+    size_t dimension() const;
+    size_t size() const;
+    KDNode<N,ElemType>* get_root() const;
+    KDNode<N,ElemType>** get_next(KDNode<N, ElemType>**); 
+    //Others
+    map<double, Point<N,ElemType>*> knn;
+    map<double, Point<N,ElemType>*> rq;
 
 private:
-    // TODO: Add implementation details here.
+    size_t _size, _dimension;
+    KDNode<N, ElemType>* root;
+    
 };
 
-/** KDTree class implementation details */
 
 template <size_t N, typename ElemType>
 KDTree<N, ElemType>::KDTree() {
-    // TODO: Fill this in.
+    root = nullptr;
+    _size=0;
+    _dimension=N;
 }
 
 template <size_t N, typename ElemType>
 KDTree<N, ElemType>::~KDTree() {
-    // TODO: Fill this in.
+    
+}
+template <size_t N, typename ElemType>
+size_t KDTree<N, ElemType>::dimension() const {
+    return N;
 }
 
 template <size_t N, typename ElemType>
-size_t KDTree<N, ElemType>::dimension() const {
-    // TODO: Fill this in.
-    return 0;
+size_t KDTree<N, ElemType>::size() const {
+    return _size;
 }
 
-// TODO: finish the implementation of the rest of the KDTree class
+template <size_t N, typename ElemType>
+bool KDTree<N, ElemType>::empty() const {
+    return !_size;
+}
+
+template <std::size_t N, typename ElemType>
+KDNode<N,ElemType>* KDTree<N, ElemType>::get_root() const 
+{
+    return root;
+}
+
+template <size_t N, typename ElemType>
+KDNode<N,ElemType>** KDTree<N, ElemType>::get_next(KDNode<N,ElemType>** p)
+{
+    KDNode<N,ElemType>** l = &((*p)->m_nodes[0]);
+    KDNode<N,ElemType>** r = &((*p)->m_nodes[1]);
+    while((*l)->m_nodes[0] && (*r)->m_nodes[1]){
+        l = &((*l)->m_nodes[0]);
+        r = &((*r)->m_nodes[1]);
+    }
+    return (!!(*l))? l : r;
+}
+
+
+template <size_t N, typename ElemType>
+bool KDTree<N, ElemType>::find(KDNode<N,ElemType>**& cur_node, Point<N,ElemType>& point, size_t &depth)
+{
+    size_t cur_depth = -1;
+    for(
+        cur_node = &root;
+        *cur_node && (*cur_node)->_point!=point;
+        cur_depth=(*cur_node)->_depth, 
+        cur_node = &((*cur_node)->m_nodes[ point[cur_depth%_dimension] > (*cur_node)->_point[cur_depth%_dimension]])
+        );
+    depth= cur_depth;
+    return !!* cur_node;
+}
+
+template <size_t N, typename ElemType>
+bool KDTree<N, ElemType>::insert(Point<N, ElemType>& p)
+{
+    size_t cur_depth;
+    KDNode<N, ElemType>** cur_node;
+    if(find(cur_node, p, cur_depth)) return 0;
+    KDNode<N,ElemType>* t = new KDNode<N,ElemType>(p,++cur_depth);
+    *cur_node = t;
+    return 1;
+}
+template <size_t N, typename ElemType>
+bool KDTree<N, ElemType>::erase(Point<N, ElemType>& p)
+{
+    size_t cur_depth;
+    KDNode<N, ElemType>** cur_node;
+    if(!find(cur_node, p, cur_depth)) return 0;
+
+    if ((*cur_node)->m_nodes[0] && (*cur_node)->m_nodes[1]) 
+    {
+        KDNode<N,ElemType>** q = get_next(cur_node);
+        (*cur_node)->_point = (*q)->_point;
+        cur_node = q;
+    }
+    KDNode<N,ElemType>* t = *cur_node;
+    *cur_node = (*cur_node)->m_nodes[!(*cur_node)->m_nodes[0]];
+    delete t;
+    return 1;
+}
+
+
+template <size_t N, typename ElemType>
+double KDTree<N, ElemType>::nearest_neighbor(Point<N,ElemType>& key, KDNode<N,ElemType>* &p)
+{
+    double best_distance = numeric_limits<double>::infinity();
+    nearest_neighbor(root,size_t(0),key,p, best_distance);
+    return Distance(p->_point,key);
+}
+
+template <size_t N, typename ElemType>
+void KDTree<N, ElemType>::nearest_neighbor(KDNode<N,ElemType>* cur_node, size_t depth, Point<N,ElemType>& key, KDNode<N,ElemType>*& candidate_node, double& best_distance){
+    if (!cur_node)
+        return;
+    
+    if (Distance(cur_node->_point, key) < best_distance)
+    {
+        best_distance = Distance(cur_node->_point, key);
+        candidate_node = cur_node;
+    }
+
+    int axis = depth % _dimension;
+    bool right = false;
+    
+    if (key[axis] < cur_node->_point[axis]) 
+    {
+        right = true;
+        nearest_neighbor(cur_node->m_nodes[0], ++depth, key, candidate_node, best_distance);
+    } 
+    else 
+    {
+        right = false;
+        nearest_neighbor(cur_node->m_nodes[1], ++depth, key, candidate_node, best_distance);
+    }
+
+    if (fabs(cur_node->_point[axis] - key[axis]) < best_distance) 
+    {
+        if (right) nearest_neighbor(cur_node->m_nodes[0], ++depth, key, candidate_node, best_distance);
+        else nearest_neighbor(cur_node->m_nodes[1], ++depth,key,  candidate_node, best_distance);
+    }
+}
+
+
+template <size_t N, typename ElemType>
+void KDTree<N, ElemType>::k_nearest_neighbor(size_t k, Point<N,ElemType>& key)
+{
+    double best_distance = numeric_limits<double>::infinity();
+    k_nearest_neighbor(root,size_t(0),key,knn,k, best_distance);
+}
+
+template <size_t N, typename ElemType>
+void KDTree<N, ElemType>::k_nearest_neighbor(   KDNode<N,ElemType>* cur_node,
+                                                size_t depth,
+                                                Point<N,ElemType>& key,
+                                                map<double, Point<N,ElemType>*>& m,
+                                                size_t k,
+                                                double best_distance){
+    if (!cur_node) return;
+    
+    if (Distance(cur_node->_point, key) < best_distance)
+    {
+        best_distance = Distance(cur_node->_point, key);
+        
+        if(m.size() < k){
+            m.insert(make_pair(Distance(cur_node->_point, key),&cur_node->_point));
+        }
+        else
+        {
+            auto _begin = m.begin(),  _end = m.end();
+            if (_begin->first > best_distance)
+            {
+                _end--;
+                m.erase(_end);
+                m.insert(make_pair(Distance(cur_node->_point, key),&cur_node->_point));
+            }
+        }
+    }
+    
+    int axis = depth % _dimension;
+    bool right = false;
+    
+    if (key[axis] < cur_node->_point[axis]) 
+    {
+        right = true;
+        k_nearest_neighbor(cur_node->m_nodes[0], ++depth, key, m,k,best_distance);
+    } 
+    else 
+    {
+        right = false;
+        k_nearest_neighbor(cur_node->m_nodes[1], ++depth, key, m,k,best_distance);
+    }
+
+    if (fabs(cur_node->_point[axis] - key[axis]) < best_distance) 
+    {
+        if (right) k_nearest_neighbor(cur_node->m_nodes[0], ++depth, key, m,k,best_distance);
+        else k_nearest_neighbor(cur_node->m_nodes[1], ++depth, key, m,k,best_distance);
+    }
+}
+
+template <size_t N, typename ElemType>
+void KDTree<N, ElemType>::range_query(  KDNode<N,ElemType>* cur_node,
+                                        size_t depth,
+                                        Point<N,ElemType>& key,
+                                        map<double,Point<N,ElemType>*>& m, 
+                                        double radius)
+{
+    if (!cur_node)
+    return;
+    
+    if (Distance(cur_node->_point, key) < radius){
+        m.insert(make_pair(Distance(cur_node->_point, key),&cur_node->_point));
+    }
+        
+    int axis = depth % _dimension;
+    bool right = false;
+    
+    if (key[axis] < cur_node->_point[axis]) 
+    {
+        right = true;
+        range_query(cur_node->m_nodes[0], ++depth, key, m,radius);
+    } 
+    else 
+    {
+        right = false;
+        range_query(cur_node->m_nodes[1], ++depth, key, m,radius);
+    }
+
+    if (fabs(cur_node->_point[axis] - key[axis]) < radius) 
+    {
+        if (right) range_query(cur_node->m_nodes[0], ++depth, key, m,radius);
+        else range_query(cur_node->m_nodes[1], ++depth, key, m,radius);
+    }
+}
+
+template <size_t N, typename ElemType>
+void KDTree<N, ElemType>::range_query(double radius,Point<N,ElemType>& key)
+{
+    range_query(root,0,key,rq, radius);
+}
 
 #endif // KDTREE_INCLUDED
