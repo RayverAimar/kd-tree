@@ -19,18 +19,24 @@ template <size_t N, typename ElemType>
 class Point {
 public:
 
+    //Constructors & Destructors
     Point();
     Point(ElemType*);
     ~Point();
 
+    //Getters
     size_t size() const;
-    ElemType* duplicate();
+
+    //Primary Functions
     bool insert(size_t, ElemType);
-    bool operator == (const Point<N,ElemType>& p);
-    bool operator != (const Point<N,ElemType>& p);
+
+    //Operators
+    bool operator == (const Point<N,ElemType>&);
+    bool operator != (const Point<N,ElemType>&);
     Point<N,ElemType>& operator = (const Point<N,ElemType>&);
     ElemType  operator []  (size_t) const;
-    ElemType& operator []  (size_t);
+    
+    //Auxiliar Functions
     void print();
 
 private:
@@ -76,11 +82,6 @@ bool Point<N, ElemType>::insert(size_t i, ElemType value){
 }
 
 template <size_t N, typename ElemType>
-ElemType* Point<N, ElemType>::duplicate() {
-    return coords;
-}
-
-template <size_t N, typename ElemType>
 double Distance(const Point<N, ElemType>& one, const Point<N, ElemType>& two);
 
 template <size_t N, typename ElemType>
@@ -119,13 +120,8 @@ ElemType Point<N, ElemType>::operator[] (size_t i) const{
 }
 
 template <size_t N, typename ElemType>
-ElemType& Point<N, ElemType>::operator[] (size_t i){
-    return coords[i];
-}
-
-template <size_t N, typename ElemType>
 void Point<N, ElemType>::print(){
-    cout<<"( ";
+    cout<<"(";
     for(size_t i = 0; i < _size; i++){
         cout<<coords[i];
         if (i<_size-1)
